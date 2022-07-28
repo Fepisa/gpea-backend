@@ -1,0 +1,159 @@
+<?php
+   
+namespace App\Http\Controllers\API;
+   
+use Illuminate\Http\Request;
+use App\Http\Controllers\API\BaseController as BaseController;
+use App\Models\Laudo;
+use Validator;
+use App\Http\Resources\LaudoResource;
+use Carbon\Carbon;
+   
+class LaudoController extends BaseController
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        $laudos = Laudo::all();
+    
+        return $this->sendResponse(LaudoResource::collection($laudos), 'Laudos técnicos encontrados com sucesso.');
+    }
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        $input = $request->all();
+   
+        $validator = Validator::make($input, [
+            'codigo' => 'required',
+            'descricao' => 'required',
+            'capacidade' => 'required',
+            'massa' => 'required',
+            'quantidade' => 'required',
+            'tipo' => 'required',
+            'empresa' => 'required',
+            'local_geral' => 'required',
+            'local_especifico' => 'required',
+            'data' => 'required',
+            'contrato' => 'required',
+            'crea' => 'required',
+            'art' => 'required'
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Erro de validação dos dados.', $validator->errors());
+        }
+
+        $input['data'] = Carbon::createFromFormat('d/m/Y', $input['data']);
+        if ($input['data_2']) {
+            $input['data_2'] = Carbon::createFromFormat('d/m/Y', $input['data_2']);
+        }
+   
+        $laudo = Laudo::create($input);
+   
+        return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico registrado com sucesso.');
+    } 
+   
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $laudo = Laudo::find($id);
+  
+        if (is_null($laudo)) {
+            return $this->sendError('Laudo técnico não encontrado.');
+        }
+   
+        return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico encontrado com sucesso.');
+    }
+    
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Laudo $laudo)
+    {
+        $input = $request->all();
+   
+        $validator = Validator::make($input, [
+            'codigo' => 'required',
+            'descricao' => 'required',
+            'capacidade' => 'required',
+            'massa' => 'required',
+            'quantidade' => 'required',
+            'tipo' => 'required',
+            'empresa' => 'required',
+            'local_geral' => 'required',
+            'local_especifico' => 'required',
+            'data' => 'required',
+            'contrato' => 'required',
+            'crea' => 'required',
+            'art' => 'required'
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Erro de validação dos dados.', $validator->errors());
+        }
+
+        $input['data'] = Carbon::createFromFormat('d/m/Y', $input['data']);
+        if ($input['data_2']) {
+            $input['data_2'] = Carbon::createFromFormat('d/m/Y', $input['data_2']);
+        }
+
+        $laudo->codigo = $input['codigo'];
+        $laudo->descricao = $input['descricao'];
+        $laudo->capacidade = $input['capacidade'];
+        $laudo->massa = $input['massa'];
+        $laudo->quantidade = $input['quantidade'];
+        $laudo->tipo = $input['tipo'];
+        $laudo->empresa = $input['empresa'];
+        $laudo->local_geral = $input['local_geral'];
+        $laudo->local_especifico = $input['local_especifico'];
+        $laudo->data = $input['data'];
+        $laudo->contrato = $input['contrato'];
+        $laudo->crea = $input['crea'];
+        $laudo->art = $input['art'];
+        $laudo->capacidade_2 = $input['capacidade_2'];
+        $laudo->massa_2 = $input['massa_2'];
+        $laudo->quantidade_2 = $input['quantidade_2'];
+        $laudo->tipo_2 = $input['tipo_2'];
+        $laudo->empresa_2 = $input['empresa_2'];
+        $laudo->local_geral_2 = $input['local_geral_2'];
+        $laudo->local_especifico_2 = $input['local_especifico_2'];
+        $laudo->data_2 = $input['data_2'];
+        $laudo->contrato_2 = $input['contrato_2'];
+        $laudo->crea_2 = $input['crea_2'];
+        $laudo->art_2 = $input['art_2'];        
+        $laudo->save();
+   
+        return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico atualizado com sucesso.');
+    }
+   
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Laudo $laudo)
+    {
+        $laudo->delete();
+   
+        return $this->sendResponse([], 'Laudo excluido com sucesso.');
+    }
+}
