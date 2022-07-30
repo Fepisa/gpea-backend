@@ -7,6 +7,7 @@ use App\Http\Controllers\API\LoginController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\LaudoController;
 use App\Http\Controllers\API\ImageController;
+use App\Http\Controllers\API\PublicLaudoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,8 +21,8 @@ use App\Http\Controllers\API\ImageController;
 */
 
 Route::controller(LoginController::class)->group(function(){
-    // Route::post('register', 'register');
     Route::post('login', 'login');
+    Route::resource('laudos-mobile', PublicLaudoController::class);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
