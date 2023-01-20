@@ -53,12 +53,17 @@ class LaudoController extends BaseController
             return $this->sendError('Erro de validação dos dados.', $validator->errors());
         }
 
-        $input['data'] = Carbon::createFromFormat('d/m/Y', $input['data']);
-        $input['validade'] = Carbon::createFromFormat('d/m/Y', $input['validade']);
-   
-        $laudo = Laudo::create($input);
-   
-        return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico registrado com sucesso.');
+        $laudo = Laudo::where('codigo', $input['codigo'])->get();
+  
+        if ($laudo->isEmpty()) {
+            $input['data'] = Carbon::createFromFormat('d/m/Y', $input['data']);
+            $input['validade'] = Carbon::createFromFormat('d/m/Y', $input['validade']);
+       
+            $laudo = Laudo::create($input);
+       
+            return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico registrado com sucesso.');
+        }
+        return $this->sendError('Laudo já registrado!');
     } 
    
     /**
@@ -110,27 +115,33 @@ class LaudoController extends BaseController
             return $this->sendError('Erro de validação dos dados.', $validator->errors());
         }
 
-        $input['data'] = Carbon::createFromFormat('d/m/Y', $input['data']);
-        $input['validade'] = Carbon::createFromFormat('d/m/Y', $input['validade']);
+        $codigo = $input['codigo'];
 
-        $laudo->codigo = $input['codigo'];
-        $laudo->descricao = $input['descricao'];
-        $laudo->capacidade = $input['capacidade'];
-        $laudo->massa = $input['massa'];
-        $laudo->quantidade = $input['quantidade'];
-        $laudo->tipo = $input['tipo'];
-        $laudo->local_geral = $input['local_geral'];
-        $laudo->local_especifico = $input['local_especifico'];
-        $laudo->data = $input['data'];
-        $laudo->validade = $input['validade'];
-        $laudo->relatorio = $input['relatorio'];
-        $laudo->responsavel_tecnico = $input['responsavel_tecnico'];
-        $laudo->contratante = $input['contratante'];
-        $laudo->contratada = $input['contratada'];
-        $laudo->observacao = $input['observacao'];
-        $laudo->save();
-   
-        return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico atualizado com sucesso.');
+        $oldLaudo = Laudo::where('codigo', $codigo)->get();
+  
+        if ($oldLaudo->isEmpty() || $codigo === $laudo->codigo) {
+            $input['data'] = Carbon::createFromFormat('d/m/Y', $input['data']);
+            $input['validade'] = Carbon::createFromFormat('d/m/Y', $input['validade']);
+    
+            $laudo->codigo = $input['codigo'];
+            $laudo->descricao = $input['descricao'];
+            $laudo->capacidade = $input['capacidade'];
+            $laudo->massa = $input['massa'];
+            $laudo->quantidade = $input['quantidade'];
+            $laudo->tipo = $input['tipo'];
+            $laudo->local_geral = $input['local_geral'];
+            $laudo->local_especifico = $input['local_especifico'];
+            $laudo->data = $input['data'];
+            $laudo->validade = $input['validade'];
+            $laudo->relatorio = $input['relatorio'];
+            $laudo->responsavel_tecnico = $input['responsavel_tecnico'];
+            $laudo->contratante = $input['contratante'];
+            $laudo->contratada = $input['contratada'];
+            $laudo->save();
+       
+            return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico atualizado com sucesso.');    
+        }
+        return $this->sendError('Laudo já registrado!');
     }
    
     /**

@@ -29,7 +29,6 @@ return new class extends Migration
             $table->string('responsavel_tecnico');
             $table->string('contratante');
             $table->string('contratada');
-            $table->string('observacao')->nullable();
             $table->timestamps();
         });
     }
