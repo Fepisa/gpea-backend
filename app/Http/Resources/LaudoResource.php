@@ -22,24 +22,15 @@ class LaudoResource extends JsonResource
             'massa' => $this->massa,
             'quantidade' => $this->quantidade,
             'tipo' => $this->tipo,
-            'empresa' => $this->empresa,
             'local_geral' => $this->local_geral,
             'local_especifico' => $this->local_especifico,
             'data' => $this->data->format('d/m/Y'),
-            'contrato' => $this->contrato,
-            'crea' => $this->crea,
-            'art' => $this->art,
-            'capacidade_2' => $this->capacidade_2,
-            'massa_2' => $this->massa_2,
-            'quantidade_2' => $this->quantidade_2,
-            'tipo_2' => $this->tipo_2,
-            'empresa_2' => $this->empresa_2,
-            'local_geral_2' => $this->local_geral_2,
-            'local_especifico_2' => $this->local_especifico_2,
-            'data_2' => $this->data_2->format('d/m/Y'),
-            'contrato_2' => $this->contrato_2,
-            'crea_2' => $this->crea_2,
-            'art_2' => $this->art_2
+            'validade' => $this->validade->format('d/m/Y'),
+            'relatorio' => $this->relatorio,
+            'responsavel_tecnico' => $this->responsavel_tecnico,
+            'contratante' => $this->contratante,
+            'contratada' => $this->contratada,
+            'observacao' => $this->observacao
         ];
     }
 }

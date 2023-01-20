@@ -39,13 +39,14 @@ class LaudoController extends BaseController
             'massa' => 'required',
             'quantidade' => 'required',
             'tipo' => 'required',
-            'empresa' => 'required',
             'local_geral' => 'required',
             'local_especifico' => 'required',
             'data' => 'required',
-            'contrato' => 'required',
-            'crea' => 'required',
-            'art' => 'required'
+            'validade' => 'required',
+            'relatorio' => 'required',
+            'responsavel_tecnico' => 'required',
+            'contratante' => 'required',
+            'contratada' => 'required'
         ]);
    
         if($validator->fails()){
@@ -53,9 +54,7 @@ class LaudoController extends BaseController
         }
 
         $input['data'] = Carbon::createFromFormat('d/m/Y', $input['data']);
-        if ($input['data_2']) {
-            $input['data_2'] = Carbon::createFromFormat('d/m/Y', $input['data_2']);
-        }
+        $input['validade'] = Carbon::createFromFormat('d/m/Y', $input['validade']);
    
         $laudo = Laudo::create($input);
    
@@ -97,13 +96,14 @@ class LaudoController extends BaseController
             'massa' => 'required',
             'quantidade' => 'required',
             'tipo' => 'required',
-            'empresa' => 'required',
             'local_geral' => 'required',
             'local_especifico' => 'required',
             'data' => 'required',
-            'contrato' => 'required',
-            'crea' => 'required',
-            'art' => 'required'
+            'validade' => 'required',
+            'relatorio' => 'required',
+            'responsavel_tecnico' => 'required',
+            'contratante' => 'required',
+            'contratada' => 'required'
         ]);
    
         if($validator->fails()){
@@ -111,9 +111,7 @@ class LaudoController extends BaseController
         }
 
         $input['data'] = Carbon::createFromFormat('d/m/Y', $input['data']);
-        if ($input['data_2']) {
-            $input['data_2'] = Carbon::createFromFormat('d/m/Y', $input['data_2']);
-        }
+        $input['validade'] = Carbon::createFromFormat('d/m/Y', $input['validade']);
 
         $laudo->codigo = $input['codigo'];
         $laudo->descricao = $input['descricao'];
@@ -121,24 +119,15 @@ class LaudoController extends BaseController
         $laudo->massa = $input['massa'];
         $laudo->quantidade = $input['quantidade'];
         $laudo->tipo = $input['tipo'];
-        $laudo->empresa = $input['empresa'];
         $laudo->local_geral = $input['local_geral'];
         $laudo->local_especifico = $input['local_especifico'];
         $laudo->data = $input['data'];
-        $laudo->contrato = $input['contrato'];
-        $laudo->crea = $input['crea'];
-        $laudo->art = $input['art'];
-        $laudo->capacidade_2 = $input['capacidade_2'];
-        $laudo->massa_2 = $input['massa_2'];
-        $laudo->quantidade_2 = $input['quantidade_2'];
-        $laudo->tipo_2 = $input['tipo_2'];
-        $laudo->empresa_2 = $input['empresa_2'];
-        $laudo->local_geral_2 = $input['local_geral_2'];
-        $laudo->local_especifico_2 = $input['local_especifico_2'];
-        $laudo->data_2 = $input['data_2'];
-        $laudo->contrato_2 = $input['contrato_2'];
-        $laudo->crea_2 = $input['crea_2'];
-        $laudo->art_2 = $input['art_2'];        
+        $laudo->validade = $input['validade'];
+        $laudo->relatorio = $input['relatorio'];
+        $laudo->responsavel_tecnico = $input['responsavel_tecnico'];
+        $laudo->contratante = $input['contratante'];
+        $laudo->contratada = $input['contratada'];
+        $laudo->observacao = $input['observacao'];
         $laudo->save();
    
         return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico atualizado com sucesso.');
