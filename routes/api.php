@@ -25,6 +25,8 @@ Route::controller(LoginController::class)->group(function(){
     Route::resource('laudos-mobile', PublicLaudoController::class);
 });
 
+Route::middleware('auth:sanctum')->patch('/laudos/observacao', 'App\Http\Controllers\API\LaudoController@updateObservacao');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('laudos', LaudoController::class);

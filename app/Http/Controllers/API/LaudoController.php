@@ -137,11 +137,38 @@ class LaudoController extends BaseController
             $laudo->responsavel_tecnico = $input['responsavel_tecnico'];
             $laudo->contratante = $input['contratante'];
             $laudo->contratada = $input['contratada'];
+            $laudo->observacao = $input['observacao'];
             $laudo->save();
        
             return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico atualizado com sucesso.');    
         }
         return $this->sendError('Laudo já registrado!');
+    }
+
+    /**
+     * Update field observacao in laudo.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function updateObservacao(Request $request)
+    {
+        $input = $request->all();
+
+        $id = $input['id'];
+        $observacao = $input['observacao'];
+
+        $laudo = Laudo::find($id);
+
+        if (is_null($laudo)) {
+            return $this->sendError('Laudo técnico não encontrado.');
+        }
+  
+        $laudo->observacao = $input['observacao'];
+        $laudo->save();
+       
+        return $this->sendResponse(new LaudoResource($laudo), 'Observação de laudo técnico atualizada com sucesso.');    
     }
    
     /**

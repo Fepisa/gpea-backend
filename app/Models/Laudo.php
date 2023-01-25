@@ -12,7 +12,7 @@ class Laudo extends Model
     protected $table = 'laudo';
 
     protected $fillable = ['codigo', 'descricao', 'capacidade', 'massa', 'quantidade', 'tipo', 'local_geral', 'local_especifico', 
-    'data', 'validade', 'relatorio', 'responsavel_tecnico', 'contratante', 'contratada'];
+    'data', 'validade', 'relatorio', 'responsavel_tecnico', 'contratante', 'contratada', 'observacao'];
 
     protected $dates = ['data', 'validade'];
 }
