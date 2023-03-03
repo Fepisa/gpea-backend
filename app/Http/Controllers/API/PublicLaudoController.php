@@ -20,4 +20,21 @@ class PublicLaudoController extends BaseController
         return $this->sendResponse(LaudoResource::collection($laudos), 'Laudos técnicos encontrados com sucesso.');
     }
 
+    /**
+     * Display the specified resource.
+     *
+     * @param  string  $codigo
+     * @return \Illuminate\Http\Response
+     */
+    public function getByCodigo($codigo)
+    {
+        $laudo = Laudo::where('codigo', $codigo)->get();
+ 
+        if ($laudo->isEmpty()) {
+            return $this->sendError('Laudo técnico não encontrado.');
+        }
+   
+        return $this->sendResponse(new LaudoResource($laudo[0]), 'Laudo técnico encontrado com sucesso.');
+    }
+
 }

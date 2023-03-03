@@ -22,9 +22,10 @@ use App\Http\Controllers\API\PublicLaudoController;
 
 Route::controller(LoginController::class)->group(function(){
     Route::post('login', 'login');
-    Route::resource('laudos-mobile', PublicLaudoController::class);
 });
 
+Route::resource('laudos-mobile', PublicLaudoController::class);
+Route::get('/laudos/codigo/{codigo}', 'App\Http\Controllers\API\PublicLaudoController@getByCodigo');
 Route::middleware('auth:sanctum')->patch('/laudos/observacao', 'App\Http\Controllers\API\LaudoController@updateObservacao');
 
 Route::middleware('auth:sanctum')->group(function () {
