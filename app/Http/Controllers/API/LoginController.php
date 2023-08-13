@@ -21,6 +21,9 @@ class LoginController extends BaseController
             $user = Auth::user(); 
             $success['token'] =  $user->createToken('GpeaApi')->plainTextToken; 
             $success['name'] =  $user->name;
+            $success['empresa'] = $user->empresa;
+            $success['local'] = $user->local;
+            $success['roles'] = $user->getRoleNames();
    
             return $this->sendResponse($success, 'Usuário logado com sucesso.');
         } 

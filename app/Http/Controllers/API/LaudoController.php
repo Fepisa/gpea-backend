@@ -8,6 +8,9 @@ use App\Models\Laudo;
 use Validator;
 use App\Http\Resources\LaudoResource;
 use Carbon\Carbon;
+use App\Exports\ExportLaudo;
+use App\Imports\ImportLaudo;
+use Maatwebsite\Excel\Facades\Excel;
    
 class LaudoController extends BaseController
 {
@@ -169,6 +172,64 @@ class LaudoController extends BaseController
         $laudo->save();
        
         return $this->sendResponse(new LaudoResource($laudo), 'Observação de laudo técnico atualizada com sucesso.');    
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  string  $local_geral
+     * @param  string  $contratante
+     * @return \Illuminate\Http\Response
+     */
+    public function getByLocalAndContratante($local_geral, $contratante)
+    {
+        $laudos = Laudo::where('local_geral', $local_geral)->where('contratante', $contratante)->get();
+
+        if ($laudos->isEmpty()) {
+            return $this->sendError('Laudos técnicos não encontrados.');
+        }
+    
+        return $this->sendResponse(LaudoResource::collection($laudos), 'Laudos técnicos encontrados com sucesso.');
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  string  $codigo
+     * @return \Illuminate\Http\Response
+     */
+    public function getByCodigo($codigo)
+    {
+        $laudo = Laudo::where('codigo', $codigo)->get();
+ 
+        if ($laudo->isEmpty()) {
+            return $this->sendError('Laudo técnico não encontrado.');
+        }
+   
+        return $this->sendResponse(new LaudoResource($laudo[0]), 'Laudo técnico encontrado com sucesso.');
+    }
+
+    /**
+     * Import CSV File.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function importCsv()
+    {
+        Excel::import(new ImportLaudo, request()->file('file'));   
+        return $this->sendResponse([], 'Laudo(s) técnico(s) importado(s) com sucesso.');
+    }
+
+    /**
+     * Export CSV File.
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function exportCsv()
+    {
+        return Excel::download(new ExportLaudo, 'laudos.csv', \Maatwebsite\Excel\Excel::CSV, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
    
     /**
