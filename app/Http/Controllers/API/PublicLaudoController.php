@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\API\BaseController as BaseController;
 use App\Models\Laudo;
 use App\Http\Resources\LaudoResource;
+use App\Exports\PublicExportLaudo;
+use Maatwebsite\Excel\Facades\Excel;
    
 class PublicLaudoController extends BaseController
 {
@@ -35,6 +37,18 @@ class PublicLaudoController extends BaseController
         }
    
         return $this->sendResponse(new LaudoResource($laudo[0]), 'Laudo técnico encontrado com sucesso.');
+    }
+
+    /**
+     * Export CSV File.
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function publicExportCsv()
+    {
+        return Excel::download(new PublicExportLaudo, 'laudos.csv', \Maatwebsite\Excel\Excel::CSV, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 
 }

@@ -26,6 +26,7 @@ Route::controller(LoginController::class)->group(function(){
 
 Route::resource('laudos-mobile', PublicLaudoController::class);
 Route::get('/laudos/codigo/{codigo}', 'App\Http\Controllers\API\PublicLaudoController@getByCodigo');
+Route::get('/laudos/exportar-mobile', 'App\Http\Controllers\API\PublicLaudoController@publicExportCsv');
 
 Route::group(['middleware' => ['auth:sanctum', 'can:view-laudos']], function() {
     Route::get('/users/current', 'App\Http\Controllers\API\UserController@currentUser');
