@@ -34,6 +34,13 @@ class LaudoController extends BaseController
     public function store(Request $request)
     {
         $input = $request->all();
+
+        $user = auth()->user();
+        if (!$this->isAdmin()) {
+            // Usuário não admin: unidade e contratante fixados conforme o usuário
+            $input['local_geral'] = $user->local;
+            $input['contratante'] = $user->empresa;
+        }
    
         $validator = Validator::make($input, [
             'codigo' => 'required',
@@ -96,6 +103,18 @@ class LaudoController extends BaseController
     public function update(Request $request, Laudo $laudo)
     {
         $input = $request->all();
+
+        $user = auth()->user();
+        if (!$this->isAdmin()) {
+            // Usuário não admin só altera laudos da própria unidade
+            if (!$this->mesmaUnidade($laudo->local_geral, $user->local)) {
+                return $this->sendError('Você não tem permissão para alterar laudos de outra unidade.', [], 403);
+            }
+            // Usuário não admin não altera código, unidade e contratante
+            $input['codigo'] = $laudo->codigo;
+            $input['local_geral'] = $laudo->local_geral;
+            $input['contratante'] = $laudo->contratante;
+        }
    
         $validator = Validator::make($input, [
             'codigo' => 'required',
@@ -140,7 +159,7 @@ class LaudoController extends BaseController
             $laudo->responsavel_tecnico = $input['responsavel_tecnico'];
             $laudo->contratante = $input['contratante'];
             $laudo->contratada = $input['contratada'];
-            $laudo->observacao = $input['observacao'];
+            $laudo->observacao = $input['observacao'] ?? $laudo->observacao;
             $laudo->save();
        
             return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico atualizado com sucesso.');    
@@ -243,5 +262,22 @@ class LaudoController extends BaseController
         $laudo->delete();
    
         return $this->sendResponse([], 'Laudo excluido com sucesso.');
+    }
+
+    /**
+     * Verifica se o usuário autenticado é administrador.
+     */
+    private function isAdmin(): bool
+    {
+        $user = auth()->user();
+        return $user !== null && $user->hasRole('Admin');
+    }
+
+    /**
+     * Compara duas unidades (local geral) ignorando maiúsculas/minúsculas e espaços.
+     */
+    private function mesmaUnidade(?string $a, ?string $b): bool
+    {
+        return mb_strtolower(trim((string) $a)) === mb_strtolower(trim((string) $b));
     }
 }
