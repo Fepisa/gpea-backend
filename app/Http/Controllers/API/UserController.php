@@ -259,4 +259,26 @@ class UserController extends BaseController
         return $this->sendResponse($userResource, 'Usuário atualizado com sucesso.');
     }
 
+    /**
+     * Remove the specified user. Rota protegida por manage-users (somente Admin).
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(User $user)
+    {
+        if (Auth::id() === $user->id) {
+            return $this->sendError('Você não pode excluir o seu próprio usuário.', [], 403);
+        }
+
+        DB::transaction(function () use ($user) {
+            // Encerra as sessões ativas e remove os vínculos de perfil antes de excluir
+            $user->tokens()->delete();
+            $user->syncRoles([]);
+            $user->delete();
+        });
+
+        return $this->sendResponse([], 'Usuário excluído com sucesso.');
+    }
+
 }
