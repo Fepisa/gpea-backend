@@ -104,12 +104,11 @@ class LaudoController extends BaseController
     {
         $input = $request->all();
 
-        $user = auth()->user();
+        if (!$this->podeAlterar($laudo)) {
+            return $this->sendError('Você não tem permissão para alterar laudos de outra unidade ou contratante.', [], 403);
+        }
+
         if (!$this->isAdmin()) {
-            // Usuário não admin só altera laudos da própria unidade
-            if (!$this->mesmaUnidade($laudo->local_geral, $user->local)) {
-                return $this->sendError('Você não tem permissão para alterar laudos de outra unidade.', [], 403);
-            }
             // Usuário não admin não altera código, unidade e contratante
             $input['codigo'] = $laudo->codigo;
             $input['local_geral'] = $laudo->local_geral;
@@ -179,12 +178,15 @@ class LaudoController extends BaseController
         $input = $request->all();
 
         $id = $input['id'];
-        $observacao = $input['observacao'];
 
         $laudo = Laudo::find($id);
 
         if (is_null($laudo)) {
             return $this->sendError('Laudo técnico não encontrado.');
+        }
+
+        if (!$this->podeAlterar($laudo)) {
+            return $this->sendError('Você não tem permissão para alterar laudos de outra unidade ou contratante.', [], 403);
         }
   
         $laudo->observacao = $input['observacao'];
@@ -259,6 +261,10 @@ class LaudoController extends BaseController
      */
     public function destroy(Laudo $laudo)
     {
+        if (!$this->podeAlterar($laudo)) {
+            return $this->sendError('Você não tem permissão para excluir laudos de outra unidade ou contratante.', [], 403);
+        }
+
         $laudo->delete();
    
         return $this->sendResponse([], 'Laudo excluido com sucesso.');
@@ -271,6 +277,22 @@ class LaudoController extends BaseController
     {
         $user = auth()->user();
         return $user !== null && $user->hasRole('Admin');
+    }
+
+    /**
+     * Admin altera qualquer laudo; demais usuários só os da mesma unidade (local geral) e contratante.
+     */
+    private function podeAlterar(Laudo $laudo): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $user = auth()->user();
+
+        return $user !== null
+            && $this->mesmaUnidade($laudo->local_geral, $user->local)
+            && $this->mesmaUnidade($laudo->contratante, $user->empresa);
     }
 
     /**

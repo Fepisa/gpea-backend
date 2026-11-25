@@ -31,15 +31,16 @@ Route::get('/laudos/exportar-mobile', 'App\Http\Controllers\API\PublicLaudoContr
 Route::group(['middleware' => ['auth:sanctum', 'can:view-laudos']], function() {
     Route::get('/users/current', 'App\Http\Controllers\API\UserController@currentUser');
     Route::patch('/users/current', 'App\Http\Controllers\API\UserController@updateCurrentUser');
+    Route::get('/laudos', [LaudoController::class, 'index']);
     Route::get('/laudos/exportar','App\Http\Controllers\API\LaudoController@exportCsv');
     Route::get('/laudos/local/{local_geral}/contratante/{contratante}', 'App\Http\Controllers\API\LaudoController@getByLocalAndContratante');
     Route::get('/laudos/{id}', 'App\Http\Controllers\API\LaudoController@show');
     Route::get('/laudos/cod/{codigo}', 'App\Http\Controllers\API\LaudoController@getByCodigo');
     Route::patch('/laudos/observacao', 'App\Http\Controllers\API\LaudoController@updateObservacao');
-    Route::post('/laudos/importar', 'App\Http\Controllers\API\LaudoController@importCsv');
     Route::get('/image/{codigo}', 'App\Http\Controllers\API\ImageController@show');
     Route::post('/laudos', [LaudoController::class, 'store']);
     Route::match(['put', 'patch'], '/laudos/{laudo}', [LaudoController::class, 'update']);
+    Route::delete('/laudos/{laudo}', [LaudoController::class, 'destroy']);
 });
 
 Route::group(['middleware' => ['auth:sanctum', 'can:manage-users']], function () {
@@ -48,6 +49,6 @@ Route::group(['middleware' => ['auth:sanctum', 'can:manage-users']], function ()
 });
 
 Route::group(['middleware' => ['auth:sanctum', 'can:manage-laudos']], function () {
-    Route::resource('laudos', LaudoController::class)->only(['index', 'destroy']);
+    Route::post('/laudos/importar', 'App\Http\Controllers\API\LaudoController@importCsv');
     Route::resource('image', ImageController::class);
 });
