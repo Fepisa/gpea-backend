@@ -8,10 +8,46 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Validator;
    
 class UserController extends BaseController
 {
+    /**
+     * Perfis de acesso disponíveis.
+     */
+    private const ROLES = ['Admin', 'Viewer'];
+
+    /**
+     * Mensagens de validação em português.
+     */
+    private const MENSAGENS = [
+        'name.required' => 'O nome é obrigatório.',
+        'email.required' => 'O e-mail é obrigatório.',
+        'email.email' => 'Informe um e-mail válido.',
+        'email.unique' => 'Já existe um usuário cadastrado com este e-mail.',
+        'password.required' => 'A senha é obrigatória.',
+        'c_password.required' => 'A confirmação de senha é obrigatória.',
+        'c_password.required_with' => 'Confirme a nova senha.',
+        'c_password.same' => 'A confirmação de senha não confere com a senha.',
+        'empresa.required' => 'A empresa é obrigatória.',
+        'local.required' => 'O local é obrigatório.',
+        'role.required' => 'A permissão de acesso é obrigatória.',
+        'role.in' => 'Permissão de acesso inválida.',
+        'new_role.required' => 'A permissão de acesso é obrigatória.',
+        'new_role.in' => 'Permissão de acesso inválida.',
+        'id.required' => 'Usuário não informado.',
+    ];
+
+    /**
+     * Retorna erro de validação com a primeira mensagem como mensagem principal.
+     */
+    private function erroValidacao($validator)
+    {
+        return $this->sendError($validator->errors()->first(), $validator->errors(), 422);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -33,20 +69,31 @@ class UserController extends BaseController
     {
         $input = $request->all();
 
+        $input['role'] = $input['role'] ?? 'Viewer';
+
         $validator = Validator::make($input, [
             'name' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required',
-            'c_password' => 'required|same:password'
-        ]);
+            'c_password' => 'required|same:password',
+            'empresa' => 'required',
+            'local' => 'required',
+            'role' => ['required', Rule::in(self::ROLES)],
+        ], self::MENSAGENS);
    
         if($validator->fails()){
-            return $this->sendError('Erro de validação dos dados.', $validator->errors());
+            return $this->erroValidacao($validator);
         }
    
         $input['password'] = bcrypt($input['password']);
-        $user = User::create($input);
-        $user->assignRole($input['role']);
+
+        // Cria o usuário e atribui o perfil na mesma transação, evitando usuário sem perfil
+        $user = DB::transaction(function () use ($input) {
+            $user = User::create($input);
+            $user->assignRole($input['role']);
+            return $user;
+        });
+
         $success['token'] =  $user->createToken('GpeaApi')->plainTextToken;
         $success['name'] =  $user->name;
    
@@ -106,11 +153,14 @@ class UserController extends BaseController
    
         $validator = Validator::make($input, [
             'name' => 'required',
-            'email' => 'required|email',
-        ]);
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'empresa' => 'required',
+            'local' => 'required',
+            'c_password' => 'required_with:password|same:password',
+        ], self::MENSAGENS);
    
         if($validator->fails()){
-            return $this->sendError('Erro de validação dos dados.', $validator->errors());
+            return $this->erroValidacao($validator);
         }
 
         $user->name = $input['name'];
@@ -118,12 +168,8 @@ class UserController extends BaseController
         $user->local = $input['local'];
         $user->empresa = $input['empresa'];
 
-        if ($input['password']) {
-            if ($input['password'] == $input['c_password']) {
-                $user->password = bcrypt($input['password']);
-            } else {
-                return $this->sendError('Erro de validação dos dados.', $validator->errors());
-            }
+        if (!empty($input['password'])) {
+            $user->password = bcrypt($input['password']);
         }
 
         $user->save();
@@ -144,19 +190,22 @@ class UserController extends BaseController
     {
         $input = $request->all();
    
-        $validator = Validator::make($input, [
-            'name' => 'required',
-            'email' => 'required|email',
-        ]);
-   
-        if($validator->fails()){
-            return $this->sendError('Erro de validação dos dados.', $validator->errors());
-        }
-
         $user = Auth::user(); 
   
         if (is_null($user)) {
             return $this->sendError('Usuário não encontrado.');
+        }
+
+        $validator = Validator::make($input, [
+            'name' => 'required',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'empresa' => 'required',
+            'local' => 'required',
+            'c_password' => 'required_with:password|same:password',
+        ], self::MENSAGENS);
+   
+        if($validator->fails()){
+            return $this->erroValidacao($validator);
         }
 
         $user->name = $input['name'];
@@ -164,12 +213,8 @@ class UserController extends BaseController
         $user->local = $input['local'];
         $user->empresa = $input['empresa'];
 
-        if ($input['password']) {
-            if ($input['password'] == $input['c_password']) {
-                $user->password = bcrypt($input['password']);
-            } else {
-                return $this->sendError('Erro de validação dos dados.', $validator->errors());
-            }
+        if (!empty($input['password'])) {
+            $user->password = bcrypt($input['password']);
         }
 
         $user->save();
@@ -189,16 +234,24 @@ class UserController extends BaseController
     public function updateRole(Request $request)
     {
         $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'id' => 'required',
+            'new_role' => ['required', Rule::in(self::ROLES)],
+        ], self::MENSAGENS);
+
+        if($validator->fails()){
+            return $this->erroValidacao($validator);
+        }
+
         $user = User::find($input['id']);
   
         if (is_null($user)) {
             return $this->sendError('Usuário não encontrado.');
         }
 
-        $user->removeRole($input["old_role"]);
-        $user->assignRole($input['new_role']);
-
-        $user->save();
+        // Substitui o(s) perfil(is) atual(is) pelo novo; funciona também para usuário sem perfil
+        $user->syncRoles([$input['new_role']]);
 
         $userResource = new UserResource($user);
         $userResource->roles = $user->getRoleNames();
