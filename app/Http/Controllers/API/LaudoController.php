@@ -21,7 +21,7 @@ class LaudoController extends BaseController
      */
     public function index()
     {
-        $laudos = Laudo::all();
+        $laudos = Laudo::with('responsavel')->get();
     
         return $this->sendResponse(LaudoResource::collection($laudos), 'Laudos técnicos encontrados com sucesso.');
     }
@@ -35,14 +35,15 @@ class LaudoController extends BaseController
     {
         $input = $request->all();
 
-        $user = auth()->user();
-        if (!$this->isAdmin()) {
-            // Usuário não admin: unidade e contratante fixados conforme o usuário
-            $input['local_geral'] = $user->local;
-            $input['contratante'] = $user->empresa;
+        // Criador é sempre o usuário logado.
+        // Responsável: Admin escolhe (ou fica o próprio, se nenhum for selecionado); demais usuários são sempre o próprio.
+        $input['criador_id'] = auth()->id();
+        if (!$this->isAdmin() || empty($input['responsavel_id'])) {
+            $input['responsavel_id'] = auth()->id();
         }
    
         $validator = Validator::make($input, [
+            'responsavel_id' => 'required|exists:users,id',
             'codigo' => 'required',
             'descricao' => 'required',
             'capacidade' => 'required',
@@ -105,17 +106,23 @@ class LaudoController extends BaseController
         $input = $request->all();
 
         if (!$this->podeAlterar($laudo)) {
-            return $this->sendError('Você não tem permissão para alterar laudos de outra unidade ou contratante.', [], 403);
+            return $this->sendError('Você não tem permissão para alterar laudos dos quais não é responsável.', [], 403);
         }
 
+        // O criador do laudo nunca é alterado
+        unset($input['criador_id']);
+
         if (!$this->isAdmin()) {
-            // Usuário não admin não altera código, unidade e contratante
+            // Usuário não admin não altera código nem responsável
             $input['codigo'] = $laudo->codigo;
-            $input['local_geral'] = $laudo->local_geral;
-            $input['contratante'] = $laudo->contratante;
+            $input['responsavel_id'] = $laudo->responsavel_id;
+        } elseif (empty($input['responsavel_id'])) {
+            // Admin sem responsável informado: mantém o atual
+            $input['responsavel_id'] = $laudo->responsavel_id;
         }
    
         $validator = Validator::make($input, [
+            'responsavel_id' => 'nullable|exists:users,id',
             'codigo' => 'required',
             'descricao' => 'required',
             'capacidade' => 'required',
@@ -159,6 +166,7 @@ class LaudoController extends BaseController
             $laudo->contratante = $input['contratante'];
             $laudo->contratada = $input['contratada'];
             $laudo->observacao = $input['observacao'] ?? $laudo->observacao;
+            $laudo->responsavel_id = $input['responsavel_id'];
             $laudo->save();
        
             return $this->sendResponse(new LaudoResource($laudo), 'Laudo técnico atualizado com sucesso.');    
@@ -186,7 +194,7 @@ class LaudoController extends BaseController
         }
 
         if (!$this->podeAlterar($laudo)) {
-            return $this->sendError('Você não tem permissão para alterar laudos de outra unidade ou contratante.', [], 403);
+            return $this->sendError('Você não tem permissão para alterar laudos dos quais não é responsável.', [], 403);
         }
   
         $laudo->observacao = $input['observacao'];
@@ -262,7 +270,7 @@ class LaudoController extends BaseController
     public function destroy(Laudo $laudo)
     {
         if (!$this->podeAlterar($laudo)) {
-            return $this->sendError('Você não tem permissão para excluir laudos de outra unidade ou contratante.', [], 403);
+            return $this->sendError('Você não tem permissão para excluir laudos dos quais não é responsável.', [], 403);
         }
 
         $laudo->delete();
@@ -280,26 +288,10 @@ class LaudoController extends BaseController
     }
 
     /**
-     * Admin altera qualquer laudo; demais usuários só os da mesma unidade (local geral) e contratante.
+     * Admin altera qualquer laudo; demais usuários só os laudos dos quais são responsáveis.
      */
     private function podeAlterar(Laudo $laudo): bool
     {
-        if ($this->isAdmin()) {
-            return true;
-        }
-
-        $user = auth()->user();
-
-        return $user !== null
-            && $this->mesmaUnidade($laudo->local_geral, $user->local)
-            && $this->mesmaUnidade($laudo->contratante, $user->empresa);
-    }
-
-    /**
-     * Compara duas unidades (local geral) ignorando maiúsculas/minúsculas e espaços.
-     */
-    private function mesmaUnidade(?string $a, ?string $b): bool
-    {
-        return mb_strtolower(trim((string) $a)) === mb_strtolower(trim((string) $b));
+        return $laudo->podeSerAlteradoPor(auth()->user());
     }
 }

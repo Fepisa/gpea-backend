@@ -30,6 +30,7 @@ Route::get('/laudos/exportar-mobile', 'App\Http\Controllers\API\PublicLaudoContr
 
 Route::group(['middleware' => ['auth:sanctum', 'can:view-laudos']], function() {
     Route::get('/users/current', 'App\Http\Controllers\API\UserController@currentUser');
+    Route::get('/users/options', [UserController::class, 'options']);
     Route::patch('/users/current', 'App\Http\Controllers\API\UserController@updateCurrentUser');
     Route::get('/laudos', [LaudoController::class, 'index']);
     Route::get('/laudos/exportar','App\Http\Controllers\API\LaudoController@exportCsv');

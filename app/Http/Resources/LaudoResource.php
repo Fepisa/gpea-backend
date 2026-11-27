@@ -30,7 +30,11 @@ class LaudoResource extends JsonResource
             'responsavel_tecnico' => $this->responsavel_tecnico,
             'contratante' => $this->contratante,
             'contratada' => $this->contratada,
-            'observacao' => $this->observacao
+            'observacao' => $this->observacao,
+            'criador_id' => $this->criador_id,
+            'responsavel_id' => $this->responsavel_id,
+            'responsavel_nome' => $this->responsavel?->name,
+            'pode_editar' => $this->resource->podeSerAlteradoPor($request->user()),
         ];
     }
 }

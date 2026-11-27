@@ -121,6 +121,18 @@ class UserController extends BaseController
     }
 
     /**
+     * Lista resumida de usuários (id, nome e e-mail) para seleção do responsável do laudo.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function options()
+    {
+        $users = User::orderBy('name')->get(['id', 'name', 'email']);
+
+        return $this->sendResponse($users, 'Usuários encontrados com sucesso.');
+    }
+
+    /**
      * Display the specified resource.
      *
      * @return \Illuminate\Http\Response

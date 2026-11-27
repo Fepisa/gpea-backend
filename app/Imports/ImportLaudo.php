@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Laudo;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
@@ -37,6 +38,8 @@ class ImportLaudo implements ToModel, WithStartRow, WithCustomCsvSettings
                 'contratante' => $row[12],
                 'contratada' => $row[13],
                 'observacao' => $row[14],
+                'criador_id' => Auth::id(),
+                'responsavel_id' => Auth::id(),
             ]);    
         }
         return null;

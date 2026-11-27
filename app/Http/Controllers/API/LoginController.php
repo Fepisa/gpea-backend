@@ -20,6 +20,7 @@ class LoginController extends BaseController
         if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
             $user = Auth::user(); 
             $success['token'] =  $user->createToken('GpeaApi')->plainTextToken; 
+            $success['id'] = $user->id;
             $success['name'] =  $user->name;
             $success['empresa'] = $user->empresa;
             $success['local'] = $user->local;

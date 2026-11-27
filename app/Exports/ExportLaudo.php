@@ -5,7 +5,6 @@ namespace App\Exports;
 use App\Models\Laudo;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -22,34 +21,11 @@ class ExportLaudo implements FromCollection, WithHeadings, WithStrictNullCompari
     */
     public function collection()
     {
-        $user = Auth::user();
-
-        if (is_null($user)) {
-            return $this->sendError('Usuário não encontrado.');
-        }
-
-        $found = false;
-
-        foreach ($user->getRoleNames() as $role) {
-            if ($role == 'Admin') {
-                $found = true;
-            }
-        }
-
-
-        if ($found) {
-            return Laudo::all(
-                'codigo', 'descricao', 'capacidade', 'massa', 'quantidade', 'tipo', 'local_geral', 'local_especifico', 
-                'data', 'validade', 'relatorio', 'responsavel_tecnico', 'contratante', 'contratada', 'observacao'
-            );
-        }
-
-        $local_geral = $user->local;
-        $contratante = $user->empresa;
-
-        return Laudo::select('codigo', 'descricao', 'capacidade', 'massa', 'quantidade', 'tipo', 'local_geral', 
-        'local_especifico', 'data', 'validade', 'relatorio', 'responsavel_tecnico', 'contratante', 'contratada', 
-        'observacao')->where('local_geral', '=', $local_geral)->where('contratante', '=', $contratante)->get();
+        // Todos os usuários (qualquer perfil) exportam os laudos de todas as unidades e empresas
+        return Laudo::all(
+            'codigo', 'descricao', 'capacidade', 'massa', 'quantidade', 'tipo', 'local_geral', 'local_especifico', 
+            'data', 'validade', 'relatorio', 'responsavel_tecnico', 'contratante', 'contratada', 'observacao'
+        );
     }
 
     public function headings(): array
